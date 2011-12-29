@@ -143,7 +143,7 @@ public class GA implements EvolutionaryAlgorithm, Serializable {
             " Last change: " + lastImprovement + 
             " Best fitness: " + population[0].getFitness() + 
             " Time spent: " + timeSpent/1000.0 + "sec" + 
-            (delta > 0 ? "(delta: " + delta +")" : "");
+            (delta > 0 ? " (improvement: " + delta +")" : "");
     }
 
     @Override

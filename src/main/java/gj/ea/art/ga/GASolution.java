@@ -86,7 +86,7 @@ public class GASolution implements ArtSolution, Serializable {
         
         for (int i = 0; i < polygonCount; i++) {
             polys[i] = getRandomPoly();
-            cols[i] = getRandomColor(1);
+            cols[i] = getRandomColor();
         }
 
         validate();
@@ -187,8 +187,10 @@ public class GASolution implements ArtSolution, Serializable {
             int b = (a + (int) (Math.random() * polygonCount)) % polygonCount;
             Polygon poly = polys[a];
             Color col = cols[a];
+            
             polys[a] = polys[b];
             cols[a] = cols[b];
+            
             polys[b] = poly;
             cols[b] = col;
         }
@@ -203,23 +205,66 @@ public class GASolution implements ArtSolution, Serializable {
      * Changes a component of random individuals.
      */
     private void mutateChance() {
-        final int COLOUR_EXTENT_CHANGE = 255;
+        final int COLOUR_EXTENT_CHANGE = 1;
         int width = sourceImage.getWidth();
         int height = sourceImage.getHeight();
+        
+        
+        /*
+        
         while (Math.random() < mutateModifyChance) {
             int which = (int) (Math.random() * polygonCount);
             int component = (int) (Math.random() * (polyVertexCount + 1));
             if (component == polyVertexCount) { // change the colour
-                int red = Math.min(Math.max(cols[which].getRed() + (int) distribution(COLOUR_EXTENT_CHANGE), 0), 255);
-                int green = Math.min(Math.max(cols[which].getGreen() + (int) distribution(COLOUR_EXTENT_CHANGE), 0), 255);
-                int blue = Math.min(Math.max(cols[which].getBlue() + (int) distribution(COLOUR_EXTENT_CHANGE), 0), 255);
-                int alpha = Math.min(Math.max(cols[which].getAlpha() + (int) distribution(COLOUR_EXTENT_CHANGE), 0), 255);
+                float red = Math.min(Math.max(cols[which].getRed() + (float) distribution(COLOUR_EXTENT_CHANGE), 0), 1);
+                float green = Math.min(Math.max(cols[which].getGreen() + (float) distribution(COLOUR_EXTENT_CHANGE), 0), 1);
+                float blue = Math.min(Math.max(cols[which].getBlue() + (float) distribution(COLOUR_EXTENT_CHANGE), 0), 1);
+                float alpha = Math.min(Math.max(cols[which].getAlpha() + (float) distribution(COLOUR_EXTENT_CHANGE), 0), 1);
                 cols[which] = new Color(red, green, blue, alpha);
             } else { // change something else
                 polys[which].xpoints[component] = polys[which].xpoints[component] + (int) distribution(width);
                 polys[which].ypoints[component] = polys[which].ypoints[component] + (int) distribution(height);
             }
+        }*/
+        
+        // polys
+        for (int i = 0; i < polygonCount; i++) {
+            for (int j = 0; j < polys[i].npoints; j++) {
+                if (Math.random() < mutateModifyChance) {
+                    polys[i].xpoints[j] = polys[i].xpoints[j] + (int) distribution(width);
+                    polys[i].ypoints[j] = polys[i].ypoints[j] + (int) distribution(height);
+                    if (polys[i].xpoints[j] < 0)
+                        polys[i].xpoints[j] = 0;
+                    else if (polys[i].xpoints[j] > width)
+                        polys[i].xpoints[j] = width;
+                    if (polys[i].ypoints[j] < 0)
+                        polys[i].ypoints[j] = 0;
+                    else if (polys[i].ypoints[j] > height)
+                        polys[i].ypoints[j] = height;
+                }
+            }
         }
+        
+        // cols
+        for (int i = 0; i < polygonCount; i++) {
+            int[] comp = { cols[i].getRed(), cols[i].getGreen(), cols[i].getBlue(), cols[i].getAlpha() };
+            boolean hasChanged = false;
+            for (int j = 0; j < 4; j++) {
+                if (Math.random() < mutateModifyChance) {
+                    comp[j] = comp[j] + (int) distribution(128);
+                    // if (comp[3]>MAX_ALPHA) comp[3]=MAX_ALPHA;
+                    if (comp[j] < 0)
+                        comp[j] = 0;
+                    else if (comp[j] > 255)
+                        comp[j] = 255;
+                    hasChanged = true;
+                }
+            }
+            if (hasChanged) {
+                cols[i] = new Color(comp[0], comp[1], comp[2], comp[3]);
+            }
+        }
+        
     }
 
     /**
