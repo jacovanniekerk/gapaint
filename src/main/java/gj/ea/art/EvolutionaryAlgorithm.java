@@ -1,7 +1,6 @@
 package gj.ea.art;
 
-import java.awt.Image;
-import java.util.Map;
+import java.awt.image.BufferedImage;
 import java.util.Properties;
 
 public interface EvolutionaryAlgorithm {
@@ -9,8 +8,8 @@ public interface EvolutionaryAlgorithm {
     /**
      * Called once before EA starts, passing the image to evolve.
      */
-    public void initialise(Image source, Properties properties);
-
+    public void initialise(BufferedImage source, Properties properties);
+    
     /**
      * Returns true if the algorithm should stop. This can potentially just
      * always returns false to create an infinite loop scenario. Graceful
@@ -33,4 +32,14 @@ public interface EvolutionaryAlgorithm {
      */
     public ArtSolution getBestSolution();
 
+    /**
+     * Returns a String describing the progress of the algorithm.
+     * 
+     * @return
+     */
+    public String getProgressString();
+    
+    public int getGenerationCounter();
+    
+    
 }

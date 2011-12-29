@@ -1,6 +1,6 @@
 package gj.ea.art;
 
-import java.awt.Image;
+import java.awt.image.BufferedImage;
 
 public interface ArtSolution {
 
@@ -16,7 +16,7 @@ public interface ArtSolution {
      * 
      * @return
      */
-    public Image getScreenSolutionImage();
+    public BufferedImage getScreenSolutionImage();
 
     /**
      * Potentially the same as getScreenSolution(), but this specifically caters
@@ -24,6 +24,6 @@ public interface ArtSolution {
      * 
      * @return
      */
-    public Image getDiskSolutionImage();
+    public BufferedImage getDiskSolutionImage();
 
 }
