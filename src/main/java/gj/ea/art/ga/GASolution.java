@@ -37,9 +37,10 @@ public class GASolution implements ArtSolution, Serializable {
     // Solution-specific values (including "genes")
     private Polygon[] polys;
     private Color[] cols;
-    
+
     private transient Future<BufferedImage> target; // current result
-    private transient Future<Long> fitness; // fitness (target against sourceImage)
+    private transient Future<Long> fitness; // fitness (target against
+                                            // sourceImage)
 
     public GASolution(BufferedImage sourceImage, Properties properties) {
         this.sourceImage = sourceImage;
@@ -63,7 +64,7 @@ public class GASolution implements ArtSolution, Serializable {
 
         Point p = new Point((int) (Math.random() * width), (int) (Math.random() * height));
         for (int i = 0; i < polyVertexCount; i++) {
-            polygon.addPoint((int) p.getX() + (int)(10*Math.random()), (int) p.getY() + (int)(10*Math.random()));
+            polygon.addPoint((int) p.getX(), (int) p.getY());
         }
         return polygon;
     }
@@ -71,7 +72,7 @@ public class GASolution implements ArtSolution, Serializable {
     private Color getRandomColor(float alpha) {
         return new Color((float) Math.random(), (float) Math.random(), (float) Math.random(), alpha);
     }
-    
+
     private Color getRandomColor() {
         return getRandomColor((float) Math.random());
     }
@@ -83,7 +84,7 @@ public class GASolution implements ArtSolution, Serializable {
     public void initialise() {
         polys = new Polygon[polygonCount];
         cols = new Color[polygonCount];
-        
+
         for (int i = 0; i < polygonCount; i++) {
             polys[i] = getRandomPoly();
             cols[i] = getRandomColor();
@@ -133,7 +134,7 @@ public class GASolution implements ArtSolution, Serializable {
         offspring.validate();
         return offspring; // and a child is born...
     }
-    
+
     private GASolution crossover(GASolution mate) {
         int singlePoint = (int) (Math.random() * polygonCount);
         GASolution offspring = new GASolution(sourceImage, properties);
@@ -159,7 +160,7 @@ public class GASolution implements ArtSolution, Serializable {
         offspring.polys = childPoly;
         offspring.cols = childCol;
 
-        return offspring; 
+        return offspring;
     }
 
     /**
@@ -171,7 +172,7 @@ public class GASolution implements ArtSolution, Serializable {
         // proportional to how early the the gene (poly) gets placed. We also
         // need a "reassignment" operator to capitalise further on this,
         // increasing exploration later in the process.
-        
+
         while (Math.random() < mutateDormantChance) {
             int which = (int) (Math.random() * polygonCount);
             cols[which] = new Color(cols[which].getRed(), cols[which].getGreen(), cols[which].getBlue(), 0);
@@ -187,10 +188,10 @@ public class GASolution implements ArtSolution, Serializable {
             int b = (a + (int) (Math.random() * polygonCount)) % polygonCount;
             Polygon poly = polys[a];
             Color col = cols[a];
-            
+
             polys[a] = polys[b];
             cols[a] = cols[b];
-            
+
             polys[b] = poly;
             cols[b] = col;
         }
@@ -202,32 +203,13 @@ public class GASolution implements ArtSolution, Serializable {
     }
 
     /**
-     * Changes a component of random individuals.
+     * Randomly change each component probabilistically.
      */
     private void mutateChance() {
-        final int COLOUR_EXTENT_CHANGE = 1;
         int width = sourceImage.getWidth();
         int height = sourceImage.getHeight();
-        
-        
-        /*
-        
-        while (Math.random() < mutateModifyChance) {
-            int which = (int) (Math.random() * polygonCount);
-            int component = (int) (Math.random() * (polyVertexCount + 1));
-            if (component == polyVertexCount) { // change the colour
-                float red = Math.min(Math.max(cols[which].getRed() + (float) distribution(COLOUR_EXTENT_CHANGE), 0), 1);
-                float green = Math.min(Math.max(cols[which].getGreen() + (float) distribution(COLOUR_EXTENT_CHANGE), 0), 1);
-                float blue = Math.min(Math.max(cols[which].getBlue() + (float) distribution(COLOUR_EXTENT_CHANGE), 0), 1);
-                float alpha = Math.min(Math.max(cols[which].getAlpha() + (float) distribution(COLOUR_EXTENT_CHANGE), 0), 1);
-                cols[which] = new Color(red, green, blue, alpha);
-            } else { // change something else
-                polys[which].xpoints[component] = polys[which].xpoints[component] + (int) distribution(width);
-                polys[which].ypoints[component] = polys[which].ypoints[component] + (int) distribution(height);
-            }
-        }*/
-        
-        // polys
+
+        // Modify the polygons.
         for (int i = 0; i < polygonCount; i++) {
             for (int j = 0; j < polys[i].npoints; j++) {
                 if (Math.random() < mutateModifyChance) {
@@ -244,19 +226,19 @@ public class GASolution implements ArtSolution, Serializable {
                 }
             }
         }
-        
-        // cols
+
+        // Modify the colours.
         for (int i = 0; i < polygonCount; i++) {
-            int[] comp = { cols[i].getRed(), cols[i].getGreen(), cols[i].getBlue(), cols[i].getAlpha() };
+            float[] comp = new float[] { cols[i].getRed() / 255f, cols[i].getGreen() / 255f, cols[i].getBlue() / 255f, cols[i].getAlpha() / 255f };
             boolean hasChanged = false;
             for (int j = 0; j < 4; j++) {
                 if (Math.random() < mutateModifyChance) {
-                    comp[j] = comp[j] + (int) distribution(128);
-                    // if (comp[3]>MAX_ALPHA) comp[3]=MAX_ALPHA;
-                    if (comp[j] < 0)
+                    comp[j] = comp[j] + (float) distribution(1);
+                    if (comp[j] < 0) {
                         comp[j] = 0;
-                    else if (comp[j] > 255)
-                        comp[j] = 255;
+                    } else if (comp[j] > 1) {
+                        comp[j] = 1;
+                    }
                     hasChanged = true;
                 }
             }
@@ -264,7 +246,6 @@ public class GASolution implements ArtSolution, Serializable {
                 cols[i] = new Color(comp[0], comp[1], comp[2], comp[3]);
             }
         }
-        
     }
 
     /**

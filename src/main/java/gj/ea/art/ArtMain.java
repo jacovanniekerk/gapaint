@@ -21,6 +21,7 @@ import java.util.Properties;
 import javax.imageio.ImageIO;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.JTextField;
 
 import org.apache.log4j.Logger;
 
@@ -35,18 +36,63 @@ import org.apache.log4j.Logger;
  */
 public class ArtMain extends JPanel {
 
-    /**
-     * To keep the compiler quiet.
-     */
+    public class DrawPanel extends JPanel {
+
+        private static final long serialVersionUID = 1L;
+
+        private Image buffer;
+        private Graphics2D gfx;
+        private BufferedImage source;
+        
+        public DrawPanel(BufferedImage source) {
+            super();
+            this.source = source;
+            this.setFocusable(false);
+        }
+        
+        public void init() {
+            buffer = this.createImage(this.getWidth(), this.getHeight());
+            gfx = (Graphics2D) buffer.getGraphics();
+        }
+        
+        @Override
+        public void paint(Graphics gc) {
+            if (buffer != null) {
+                gc.drawImage(buffer, 0, 0, null);
+            }
+        }
+        
+        @Override
+        public void update(Graphics gc) {
+            paint(gc);
+        }
+        
+        public Graphics2D getGraphics2D() {
+            return gfx;
+        }
+        
+        @Override
+        public int getWidth() {
+            return source.getWidth() * 2;
+        }
+
+        @Override
+        public int getHeight() {
+            return source.getHeight();
+        }
+    }
+
+    // ~
+  
     private static final long serialVersionUID = 1L;
 
     private static final Logger logger = Logger.getLogger(ArtMain.class);
 
+    private JTextField statusBar;
+    private DrawPanel drawPanel; 
+    
     private BufferedImage source;
     private Properties properties;
-    
-    private Image buffer;
-    private Graphics2D gfx;
 
     private volatile boolean quit;
 
@@ -59,7 +105,16 @@ public class ArtMain extends JPanel {
         super();
         this.source = source;
         this.properties = properties;
-
+        
+        drawPanel = new DrawPanel(source);
+        statusBar = new JTextField("Evolving Paintings using Evolutionary Algorithms");
+        
+        this.setLayout(new BorderLayout());
+        this.add(statusBar, BorderLayout.SOUTH);
+        this.add(drawPanel, BorderLayout.CENTER);
+        
+        this.requestFocus();
+        
         this.addKeyListener(new KeyAdapter() {
             @Override
             public void keyTyped(KeyEvent e) {
@@ -92,12 +147,11 @@ public class ArtMain extends JPanel {
     }
 
     public void initialise() {
-        buffer = this.createImage(this.getWidth(), this.getHeight());
-        gfx = (Graphics2D) buffer.getGraphics();
         quit = false;
-        
         setParameters(properties);
         evolutionaryAlgorithm = initEvolutionaryAlgorithm(properties);
+        
+        drawPanel.init();
     }
 
     private void setParameters(Properties properties) {
@@ -128,7 +182,7 @@ public class ArtMain extends JPanel {
     public void go() throws FileNotFoundException {
 
         // Draws the source image on the left side for comparison.
-        gfx.drawImage(source, 0, 0, null);
+        drawPanel.getGraphics2D().drawImage(source, 0, 0, null);
 
         long bestOfTheBest = Long.MAX_VALUE;
 
@@ -140,8 +194,9 @@ public class ArtMain extends JPanel {
             GASolution best = (GASolution) evolutionaryAlgorithm.getBestSolution();
 
             logger.debug(evolutionaryAlgorithm.getProgressString());
+            statusBar.setText(evolutionaryAlgorithm.getProgressString());
             if (best != null) {
-                gfx.drawImage(best.getScreenSolutionImage(), source.getWidth(), 0, null);
+                drawPanel.getGraphics2D().drawImage(best.getScreenSolutionImage(), source.getWidth(), 0, null);
                 csv.append(evolutionaryAlgorithm.getGenerationCounter() + ", " + best.getFitness() + "\n");
                 csv.flush();
 
@@ -157,33 +212,26 @@ public class ArtMain extends JPanel {
 
             repaint();
 
-            // Apparently wait() can also work.
-            try {
-                Thread.sleep(1L);
+           try {
+                Thread.sleep(1L); // Still looking for a better method than this...
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
             
         }
+        statusBar.setText("Process stopped... (you can now close this window if you wish.)");
         csv.close();
-
         repaint();
     }
 
     @Override
     public int getWidth() {
-        return source.getWidth() * 2;
+        return drawPanel.getWidth();
     }
 
     @Override
     public int getHeight() {
-        return source.getHeight();
-    }
-
-    public void paint(Graphics gc) {
-        if (buffer != null) {
-            gc.drawImage(buffer, 0, 0, null);
-        }
+        return drawPanel.getHeight() + statusBar.getHeight();
     }
 
     private static void usage() {
@@ -194,7 +242,7 @@ public class ArtMain extends JPanel {
     }
 
     public static void main(String[] args) {
-        JFrame frame = new JFrame("Evolving  Paintings using Evolutionary Algorithms");
+        JFrame frame = new JFrame("Evolving Paintings using Evolutionary Algorithms");
 
         if (args.length != 0 && args[0].equals("-h")) {
             usage();
@@ -214,15 +262,20 @@ public class ArtMain extends JPanel {
             
             ArtMain artMain = new ArtMain(pic, properties);
             
-            frame.getContentPane().setPreferredSize(new Dimension(artMain.getWidth(), artMain.getHeight()));
+            //JTextField test = new JTextField("Testing...");
+            //test.setEditable(false);
             frame.getContentPane().setLayout(new BorderLayout());
+            //frame.getContentPane().add(test, BorderLayout.SOUTH);
             frame.getContentPane().add(artMain, BorderLayout.CENTER);
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            frame.pack();
-            frame.setVisible(true);
-
+            
             artMain.setFocusable(true);
             artMain.requestFocus();
+            
+            frame.setVisible(true);
+            frame.setResizable(false);
+            frame.getContentPane().setPreferredSize(new Dimension(artMain.getWidth(), artMain.getHeight()));
+            frame.pack();
 
             artMain.initialise();
             artMain.go();

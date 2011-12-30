@@ -26,6 +26,9 @@ public final class RenderImageHelper {
     private RenderImageHelper() {
     }
 
+    // Generate colour histogram...
+    // ...
+    
     public static Future<BufferedImage> submitNewRenderTask(Polygon[] polygons, Color[] colours, int width, int height, boolean smooth) {
         return submitNewRenderTask(polygons, colours, polygons.length, width, height, smooth);
     }

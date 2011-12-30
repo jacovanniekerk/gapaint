@@ -141,8 +141,8 @@ public class GA implements EvolutionaryAlgorithm, Serializable {
         // Construct the feedback String.
         feedback = "Generation: " + generationCounter + 
             " Last change: " + lastImprovement + 
-            " Best fitness: " + population[0].getFitness() + 
-            " Time spent: " + timeSpent/1000.0 + "sec" + 
+            " Best: " + population[0].getFitness() + 
+            " Time: " + Math.round((timeSpent / 1000.0) * 10) / 10.0 + "sec" + 
             (delta > 0 ? " (improvement: " + delta +")" : "");
     }
 
