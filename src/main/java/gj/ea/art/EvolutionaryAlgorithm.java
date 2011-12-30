@@ -1,6 +1,5 @@
 package gj.ea.art;
 
-import java.awt.image.BufferedImage;
 import java.util.Properties;
 
 public interface EvolutionaryAlgorithm {
@@ -8,7 +7,7 @@ public interface EvolutionaryAlgorithm {
     /**
      * Called once before EA starts, passing the image to evolve.
      */
-    public void initialise(BufferedImage source, Properties properties);
+    public void initialise(String sourceImageFile, Properties properties);
     
     /**
      * Returns true if the algorithm should stop. This can potentially just
