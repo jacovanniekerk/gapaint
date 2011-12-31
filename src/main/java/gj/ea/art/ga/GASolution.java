@@ -2,19 +2,15 @@ package gj.ea.art.ga;
 
 import gj.ea.art.ArtSolution;
 import gj.ea.art.helpers.FitnessHelper;
-import gj.ea.art.helpers.PersistenceHelper;
 import gj.ea.art.helpers.RenderImageHelper;
 
 import java.awt.Color;
 import java.awt.Point;
 import java.awt.Polygon;
 import java.awt.image.BufferedImage;
-import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.util.Properties;
 import java.util.concurrent.Future;
-
 
 /**
  * Represents a given solution.
@@ -27,45 +23,34 @@ public class GASolution implements ArtSolution, Serializable {
     private static final long serialVersionUID = 1L;
 
     // Parameters as passed in via constructor.
-    private int polygonCount;
-    private int polyVertexCount;
-    private int initialPolyVariance;
+    int polygonCount;
+    int polyVertexCount;
 
     private double mutateModifyChance;
     private double mutateDormantChance;
     private double mutateRearrengeChance;
 
     // Housekeeping.
-    private String sourceImageFileName;
-    private transient BufferedImage sourceImage; // what we want
-    private int imageSize;
+    private BufferedImage sourceImage; // what we want
     private Properties properties;
 
     // Solution-specific values (including "genes")
-    private Polygon[] polys;
-    private Color[] cols;
+    Polygon[] polys;
+    Color[] cols;
 
     private transient Future<BufferedImage> target; // current result
     private transient Future<Long> fitness; // fitness (target against
-    
-    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-        in.defaultReadObject();
-        sourceImage = PersistenceHelper.getImage(sourceImageFileName, imageSize);
-    }
+                                            // sourceImage)
 
-    public GASolution(String sourceImageFileName, Properties properties) {
-        this.sourceImageFileName = sourceImageFileName;
+    public GASolution(BufferedImage sourceImage, Properties properties) {
+        this.sourceImage = sourceImage;
         this.properties = properties;
         setParameters(properties);
-        sourceImage = PersistenceHelper.getImage(sourceImageFileName, imageSize);
     }
 
     private void setParameters(Properties properties) {
-        imageSize = Integer.parseInt(properties.getProperty("imageSize", "300"));
-        
         polygonCount = Integer.parseInt(properties.getProperty("polygonCount", "500"));
         polyVertexCount = Integer.parseInt(properties.getProperty("polyVertexCount", "5"));
-        initialPolyVariance = Integer.parseInt(properties.getProperty("initialPolyVariance", "5"));
 
         mutateModifyChance = Double.parseDouble(properties.getProperty("mutateModifyChance", "0.01"));
         mutateDormantChance = Double.parseDouble(properties.getProperty("mutateDormantChance", "0.005"));
@@ -77,11 +62,9 @@ public class GASolution implements ArtSolution, Serializable {
         int width = sourceImage.getWidth();
         int height = sourceImage.getHeight();
 
-        Point p = new Point((int) (Math.random() * (width - initialPolyVariance)), (int) (Math.random() * (height - initialPolyVariance)));
+        Point p = new Point((int) (Math.random() * width), (int) (Math.random() * height));
         for (int i = 0; i < polyVertexCount; i++) {
-            int dx = (int) (Math.random() * initialPolyVariance);
-            int dy = (int) (Math.random() * initialPolyVariance);
-            polygon.addPoint((int) p.getX() + dx, (int) p.getY() + dy);
+            polygon.addPoint((int) p.getX(), (int) p.getY());
         }
         return polygon;
     }
@@ -154,7 +137,7 @@ public class GASolution implements ArtSolution, Serializable {
 
     private GASolution crossover(GASolution mate) {
         int singlePoint = (int) (Math.random() * polygonCount);
-        GASolution offspring = new GASolution(sourceImageFileName, properties);
+        GASolution offspring = new GASolution(sourceImage, properties);
 
         Polygon[] childPoly = new Polygon[polygonCount];
         Color[] childCol = new Color[polygonCount];
