@@ -96,7 +96,7 @@ public class ArtMain extends JPanel {
     private BufferedImage sourceImage;
     private int imageSize;
     private Properties properties;
-
+    
     private volatile boolean quit;
 
     // Properties.
@@ -236,10 +236,9 @@ public class ArtMain extends JPanel {
     }
 
     private static void usage() {
-        System.out.println("Evolving art application.\nby Jaco van Niekerk.");
+        System.out.println("Evolving art application.\ndevelopers: Jaco van Niekerk, Nico Kruger.");
         System.out.println("\nUsage: ./go.sh <image to evolve> [<width>].");
-        System.out.println("\nNote, the height will be determined from the aspect ratio, given the width.  The default image");
-        System.out.println("is tux, and if the width is omitted, 500 will be used.\n\nHave fun!");
+        System.out.println("\nNote, the height will be determined from the aspect ratio, given the width (default is 500).\n\nHave fun!");
     }
 
     public static void main(String[] args) {
@@ -255,11 +254,12 @@ public class ArtMain extends JPanel {
         try {
             properties.load(inputStreamForProperties);
 
-            String fileName = args.length > 0 ? args[0] : ArtMain.class.getResource("tux.jpg").getFile();
-            
+            if (args.length == 0) {
+                usage();
+                return;
+            }
 
-            
-            ArtMain artMain = new ArtMain(fileName, properties);
+            ArtMain artMain = new ArtMain(args[0], properties);
             
             //JTextField test = new JTextField("Testing...");
             //test.setEditable(false);
