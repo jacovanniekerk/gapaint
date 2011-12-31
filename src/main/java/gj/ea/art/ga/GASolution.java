@@ -27,7 +27,7 @@ public class GASolution implements ArtSolution, Serializable {
     private static final long serialVersionUID = 1L;
 
     // Parameters as passed in via constructor.
-    private int polygonCount;
+    int polygonCount;
     private int polyVertexCount;
     private int initialPolyVariance;
 
@@ -42,8 +42,8 @@ public class GASolution implements ArtSolution, Serializable {
     private Properties properties;
 
     // Solution-specific values (including "genes")
-    private Polygon[] polys;
-    private Color[] cols;
+    Polygon[] polys;
+    Color[] cols;
 
     private transient Future<BufferedImage> target; // current result
     private transient Future<Long> fitness; // fitness (target against
