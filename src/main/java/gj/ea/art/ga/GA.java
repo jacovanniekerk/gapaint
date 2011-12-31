@@ -2,8 +2,8 @@ package gj.ea.art.ga;
 
 import gj.ea.art.ArtSolution;
 import gj.ea.art.EvolutionaryAlgorithm;
-import gj.ea.art.helpers.PersistenceHelper;
 
+import java.awt.image.BufferedImage;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -15,7 +15,7 @@ public class GA implements EvolutionaryAlgorithm, Serializable {
 
     //private static final Logger logger = Logger.getLogger(GA.class);
     
-    // Parameters as passed in via properties
+    // Parameters as passed in via constructor
     private int populationSize;
 
     // GA values
@@ -25,11 +25,50 @@ public class GA implements EvolutionaryAlgorithm, Serializable {
     private long previousFitness; // previous iteration's fitness.
     private int lastImprovement; // the number of generations ago that a fitness was witness.
     private String feedback; // a feedback string.
+
+    /*private static void saveState(GA ga, String filename) {
+        try {
+            ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(filename));
+            out.writeObject(ga);
+            out.close();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+    
+    private static GA loadState(String filename) {
+        try {
+            ObjectInputStream in = new ObjectInputStream(new FileInputStream(filename));
+            GA ga = (GA) in.readObject();
+            in.close();
+            return ga;
+        } catch (Exception e) {
+            logger.debug("I could not load the old 'gastate' file.  Sorry, the algorithm has to \nrestart.  Delete the 'gastate' file and try again.");
+        }
+        return null;
+    }
+
+    public static GA createNewGeneticAlgorithm(BufferedImage sourceImage, Properties properties) {
+        if (new File("gastate").exists()) {
+            GA ga = loadState("gastate");
+            if (ga != null) {
+                ga.setParameters(properties);
+                return ga;
+            }
+        }
+        GA ga = new GA();
+        ga.initialiseNewRun(sourceImage, properties);
+        ga.setParameters(properties);
+        return ga;
+    }*/
     
     @Override
-    public void initialise(String sourceImageFile, Properties properties) {
+    public void initialise(BufferedImage sourceImage, Properties properties) {
+        
         setParameters(properties);
+        
         population = new GASolution[populationSize];
+        
         timeSpent = 0;
         generationCounter = 0;
         previousFitness = -1;
@@ -37,7 +76,7 @@ public class GA implements EvolutionaryAlgorithm, Serializable {
         feedback = "I have not started yet!";
         
         for (int i = 0; i < population.length; i++) {
-            population[i] = new GASolution(sourceImageFile, properties);
+            population[i] = new GASolution(sourceImage, properties);
             population[i].initialise();
         }
         sort(population, true);
@@ -91,7 +130,7 @@ public class GA implements EvolutionaryAlgorithm, Serializable {
             delta = previousFitness - population[0].getFitness();
             previousFitness = population[0].getFitness();
             lastImprovement = 0;
-            PersistenceHelper.saveState(this, "eastate");
+            // saveState("gastate");
         }
         
         // Update GA variables.
@@ -121,6 +160,5 @@ public class GA implements EvolutionaryAlgorithm, Serializable {
     public int getGenerationCounter() {
         return generationCounter;
     }
-
 
 }

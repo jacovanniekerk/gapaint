@@ -1,7 +1,6 @@
 package gj.ea.art;
 
 import gj.ea.art.ga.GASolution;
-import gj.ea.art.helpers.PersistenceHelper;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
@@ -92,27 +91,22 @@ public class ArtMain extends JPanel {
     private JTextField statusBar;
     private DrawPanel drawPanel; 
     
-    private String sourceImageFileName;
-    private BufferedImage sourceImage;
-    private int imageSize;
+    private BufferedImage source;
     private Properties properties;
 
     private volatile boolean quit;
 
-    // Properties.
     private String algorithm;
     private boolean saveImages;
-    //private int imageSize;
-    
+
     private EvolutionaryAlgorithm evolutionaryAlgorithm;
 
-    public ArtMain(String sourceImageFileName, Properties properties) {
+    public ArtMain(BufferedImage source, Properties properties) {
         super();
-        this.sourceImageFileName = sourceImageFileName;
+        this.source = source;
         this.properties = properties;
-        setParameters(properties);
-        sourceImage = PersistenceHelper.getImage(sourceImageFileName, imageSize);
-        drawPanel = new DrawPanel(sourceImage);
+        
+        drawPanel = new DrawPanel(source);
         statusBar = new JTextField("Evolving Paintings using Evolutionary Algorithms");
         
         this.setLayout(new BorderLayout());
@@ -132,29 +126,46 @@ public class ArtMain extends JPanel {
         });
     }
 
+    /**
+     * Loads an image from disk.
+     * 
+     * @param fileName
+     * @param width
+     * @return
+     */
+    public static BufferedImage getImage(String fileName, int width) {
+        try {
+            BufferedImage tmp = ImageIO.read(new File(fileName));
+            double ratio = tmp.getWidth() / (double) width;
+            int height = (int) Math.ceil(tmp.getHeight() / ratio);
+            BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_4BYTE_ABGR);
+            img.getGraphics().drawImage(tmp, 0, 0, width, height, 0, 0, tmp.getWidth(), tmp.getHeight(), null);
+            return img;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public void initialise() {
         quit = false;
-        
-        
+        setParameters(properties);
         evolutionaryAlgorithm = initEvolutionaryAlgorithm(properties);
         
         drawPanel.init();
     }
 
     private void setParameters(Properties properties) {
+        saveImages = Boolean.parseBoolean(properties.getProperty("saveImages", "true"));
         algorithm = properties.getProperty("algorithm", "true");
-        saveImages = Boolean.parseBoolean(properties.getProperty("saveImages", "false"));
-        imageSize = Integer.parseInt(properties.getProperty("imageSize", "300"));
     }
-    
+
     @SuppressWarnings("unchecked")
-    private EvolutionaryAlgorithm createNew(Properties properties) {
-        Class<EvolutionaryAlgorithm> clazz;
+    private EvolutionaryAlgorithm initEvolutionaryAlgorithm(Properties properties) {
         try {
-            clazz = (Class<EvolutionaryAlgorithm>) Class.forName(algorithm);
-            logger.debug("You selected the " + clazz.getCanonicalName() + " strategy.");
+            Class<EvolutionaryAlgorithm> clazz = (Class<EvolutionaryAlgorithm>) Class.forName(algorithm);
             EvolutionaryAlgorithm ea = clazz.newInstance();
-            ea.initialise(sourceImageFileName, properties);
+            ea.initialise(source, properties);
+            logger.debug("You selected the " + clazz.getCanonicalName() + " strategy.");
             return ea;
         } catch (ClassNotFoundException e) {
             logger.error("I could not find the EA strategy (" + algorithm + " you wanted.)");
@@ -167,23 +178,11 @@ public class ArtMain extends JPanel {
             throw new RuntimeException(e);
         }
     }
-        
-    private EvolutionaryAlgorithm initEvolutionaryAlgorithm(Properties properties) {
-        if (new File("eastate").exists()) {
-            logger.debug("I found a 'eastate' file, attempting to load...");
-            EvolutionaryAlgorithm ea = PersistenceHelper.loadState("eastate");
-            logger.debug("The saved state utilised the " + ea.getClass().getCanonicalName() + " strategy.");
-            return ea;
-        } else {
-            logger.debug("I did not find any 'eastate' file, creating a new EA, based on defined properties.");
-            return createNew(properties);
-        }
-    }
 
     public void go() throws FileNotFoundException {
 
         // Draws the source image on the left side for comparison.
-        drawPanel.getGraphics2D().drawImage(sourceImage, 0, 0, null);
+        drawPanel.getGraphics2D().drawImage(source, 0, 0, null);
 
         long bestOfTheBest = Long.MAX_VALUE;
 
@@ -197,7 +196,7 @@ public class ArtMain extends JPanel {
             logger.debug(evolutionaryAlgorithm.getProgressString());
             statusBar.setText(evolutionaryAlgorithm.getProgressString());
             if (best != null) {
-                drawPanel.getGraphics2D().drawImage(best.getScreenSolutionImage(), sourceImage.getWidth(), 0, null);
+                drawPanel.getGraphics2D().drawImage(best.getScreenSolutionImage(), source.getWidth(), 0, null);
                 csv.append(evolutionaryAlgorithm.getGenerationCounter() + ", " + best.getFitness() + "\n");
                 csv.flush();
 
@@ -249,17 +248,19 @@ public class ArtMain extends JPanel {
             usage();
         }
 
+        // Get the source image (or the default if none specified).
+        String fileName = args.length > 0 ? args[0] : ArtMain.class.getResource("tux.jpg").getFile();
+        String size = args.length > 1 ? args[1] : "300";
+        BufferedImage pic = ArtMain.getImage(fileName, Integer.parseInt(size));
+
         InputStream inputStreamForProperties = ArtMain.class.getResourceAsStream("ga.properties");
         Properties properties = new Properties();
+
         
         try {
             properties.load(inputStreamForProperties);
-
-            String fileName = args.length > 0 ? args[0] : ArtMain.class.getResource("tux.jpg").getFile();
             
-
-            
-            ArtMain artMain = new ArtMain(fileName, properties);
+            ArtMain artMain = new ArtMain(pic, properties);
             
             //JTextField test = new JTextField("Testing...");
             //test.setEditable(false);
