@@ -1,12 +1,13 @@
 package gj.ea.art;
 
-import com.google.gson.Gson;
 import gj.ea.art.ga.GA;
 import gj.ea.art.ga.GASolution;
 import gj.ea.art.ga.JsonHelper;
 
-import java.awt.*;
-import java.io.*;
+import java.io.FileInputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.ObjectInputStream;
 
 /**
  * Created by IntelliJ IDEA.

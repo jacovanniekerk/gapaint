@@ -56,8 +56,18 @@ public class GASolution implements ArtSolution, Serializable {
     public GASolution(String sourceImageFileName, Properties properties) {
         this.sourceImageFileName = sourceImageFileName;
         this.properties = properties;
+
         setParameters(properties);
+        
         sourceImage = PersistenceHelper.getImage(sourceImageFileName, imageSize);
+    }
+    
+    public GASolution(String sourceImageFileName, BufferedImage sourceImage, Properties properties) {
+        this.sourceImageFileName = sourceImageFileName;
+        this.sourceImage = sourceImage;
+        this.properties = properties;
+        
+        setParameters(properties);
     }
 
     private void setParameters(Properties properties) {
@@ -154,7 +164,7 @@ public class GASolution implements ArtSolution, Serializable {
 
     private GASolution crossover(GASolution mate) {
         int singlePoint = (int) (Math.random() * polygonCount);
-        GASolution offspring = new GASolution(sourceImageFileName, properties);
+        GASolution offspring = new GASolution(sourceImageFileName, sourceImage, properties);
 
         Polygon[] childPoly = new Polygon[polygonCount];
         Color[] childCol = new Color[polygonCount];

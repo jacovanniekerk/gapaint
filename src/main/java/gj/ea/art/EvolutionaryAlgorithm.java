@@ -38,6 +38,10 @@ public interface EvolutionaryAlgorithm {
      */
     public String getProgressString();
     
+    /**
+     * The algorithm is responsible for keeping track of the current generation.
+     * @return
+     */
     public int getGenerationCounter();
     
     
