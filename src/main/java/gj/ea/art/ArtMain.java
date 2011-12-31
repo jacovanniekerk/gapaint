@@ -143,7 +143,7 @@ public class ArtMain extends JPanel {
 
     private void setParameters(Properties properties) {
         algorithm = properties.getProperty("algorithm", "true");
-        saveImages = Boolean.parseBoolean(properties.getProperty("saveImages", "true"));
+        saveImages = Boolean.parseBoolean(properties.getProperty("saveImages", "false"));
         imageSize = Integer.parseInt(properties.getProperty("imageSize", "300"));
     }
     
